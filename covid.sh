@@ -13,11 +13,11 @@ function sendTelegram() {
 	printf "**$COUNTRY** COVID-19 new reports\n\n" >> ${CURRENTDIR}/worldometers-data.tmp
 	printf '```\n' >> ${CURRENTDIR}/worldometers-data.tmp
 	printf "Total Cases  : $1\n" >> ${CURRENTDIR}/worldometers-data.tmp
-	printf "Total Deaths : $2\n" >> ${CURRENTDIR}/worldometers-data.tmp
-	printf "New Deaths   : $3\n" >> ${CURRENTDIR}/worldometers-data.tmp
-	printf "Recovered    : $4\n" >> ${CURRENTDIR}/worldometers-data.tmp
-	printf "Active Cases : $5\n" >> ${CURRENTDIR}/worldometers-data.tmp
-	printf "Cases/1M pop : $6\n" >> ${CURRENTDIR}/worldometers-data.tmp
+	printf "New Cases    : $2\n" >> ${CURRENTDIR}/worldometers-data.tmp
+	printf "Total Deaths : $3\n" >> ${CURRENTDIR}/worldometers-data.tmp
+	printf "New Deaths   : $4\n" >> ${CURRENTDIR}/worldometers-data.tmp
+	printf "Recovered    : $5\n" >> ${CURRENTDIR}/worldometers-data.tmp
+	printf "Active Cases : $6\n" >> ${CURRENTDIR}/worldometers-data.tmp
 	printf '```\n' >> ${CURRENTDIR}/worldometers-data.tmp
 	printf "Data by worldometers.info\n" >> ${CURRENTDIR}/worldometers-data.tmp
 	cat ${CURRENTDIR}/worldometers-data.tmp
