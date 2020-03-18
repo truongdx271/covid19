@@ -2,8 +2,8 @@
 # By Truongdx271
 
 COUNTRY="Vietnam"
-TELEGRAM_API_KEY="1029193933:AAEqZp7fF5qY0PMUJgyFb6jt8V3pAWaEITQ"
-TELEGRAM_CHAT_ID="-484691617"
+TELEGRAM_API_KEY="<set-your-api-key-here>"
+TELEGRAM_CHAT_ID="<set-chat-id-here>"
 
 CURRENTDIR="$(cd "$(dirname "$0")"; pwd)"
 LASTUPDATEFILE="${CURRENTDIR}/.worldometers-corona.log"
