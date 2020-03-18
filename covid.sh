@@ -1,9 +1,9 @@
 #!/bin/bash
 # By Truongdx271
 
-COUNTRY="Norway"
-TELEGRAM_API_KEY=""
-TELEGRAM_CHAT_ID=""
+COUNTRY="Vietnam"
+TELEGRAM_API_KEY="1029193933:AAEqZp7fF5qY0PMUJgyFb6jt8V3pAWaEITQ"
+TELEGRAM_CHAT_ID="-484691617"
 
 CURRENTDIR="$(cd "$(dirname "$0")"; pwd)"
 LASTUPDATEFILE="${CURRENTDIR}/.worldometers-corona.log"
@@ -24,7 +24,8 @@ function sendTelegram() {
 	echo ""
 	urldata=$(python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])" "$(cat ${CURRENTDIR}/worldometers-data.tmp)")
 	rm ${CURRENTDIR}/worldometers-data.tmp
-	python covid.py $TELEGRAM_API_KEY $TELEGRAM_CHAT_ID $urldata
+	printf "executing python\n" >> ${CURRENTDIR}/cr.log
+	python ${CURRENTDIR}/covid.py $TELEGRAM_API_KEY $TELEGRAM_CHAT_ID $urldata
 }
 
 RAW=$(curl -s "https://www.worldometers.info/coronavirus/" | sed 's/<tr/\n<tr/g' | grep "${COUNTRY}" | grep '<tr style="">' | sed 's/<td/\n<td/g' | grep ^'<td' | sed 's/<!--//g' | sed 's/-->//g')
@@ -38,6 +39,7 @@ AC=$(echo "${RAW}" | head -9 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' 
 
 if [[ ! -z ${TC} ]]; then
 	if [[ -f ${LASTUPDATEFILE} ]]; then
+		printf "upper case\n" >> ${CURRENTDIR}/cr.log
 		CMP1=$(printf "${TC}|${NC}|${TD}|${ND}|${RC}|${AC}" | md5sum | awk '{print $1}')
 		CMP2=$(md5sum ${LASTUPDATEFILE} | awk '{print $1}')
 		if [[ ${CMP1} != ${CMP2} ]]; then
@@ -45,6 +47,7 @@ if [[ ! -z ${TC} ]]; then
 			printf "${TC}|${NC}|${TD}|${ND}|${RC}|${AC}" > ${LASTUPDATEFILE}
 		fi
 	else
+		printf "gonna send here\n" > cr.log
 		sendTelegram "${TC}" "${NC}" "${TD}" "${ND}" "${RC}" "${AC}"
 		printf "${TC}|${NC}|${TD}|${ND}|${RC}|${AC}" > ${LASTUPDATEFILE}
 	fi
