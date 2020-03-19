@@ -2,8 +2,8 @@
 # By Truongdx271
 
 COUNTRY="Vietnam"
-TELEGRAM_API_KEY="1029193933:AAEqZp7fF5qY0PMUJgyFb6jt8V3pAWaEITQ"
-TELEGRAM_CHAT_ID="-484691617"
+TELEGRAM_API_KEY="<set-your-api-key-here>"
+TELEGRAM_CHAT_ID="<set-chat-id-here>"
 
 CURRENTDIR="$(cd "$(dirname "$0")"; pwd)"
 LASTUPDATEFILE="${CURRENTDIR}/.worldometers-corona.log"
@@ -24,7 +24,11 @@ function sendTelegram() {
 	echo ""
 	urldata=$(python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1])" "$(cat ${CURRENTDIR}/worldometers-data.tmp)")
 	rm ${CURRENTDIR}/worldometers-data.tmp
+<<<<<<< HEAD:covid.sh
 	python ${CURRENTDIR}/covid.py $TELEGRAM_API_KEY $TELEGRAM_CHAT_ID $urldata
+=======
+	python ${CURRENTDIR}/pusher.py $urldata
+>>>>>>> c3aa161500f4a54b265e12e3812a7aa9790c10c3:crawler.sh
 }
 
 RAW=$(curl -s "https://www.worldometers.info/coronavirus/" | sed 's/<tr/\n<tr/g' | grep "${COUNTRY}" | grep '<tr style="">' | sed 's/<td/\n<td/g' | grep ^'<td' | sed 's/<!--//g' | sed 's/-->//g')
