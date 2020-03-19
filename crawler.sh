@@ -1,5 +1,6 @@
 #!/bin/bash
-# By Truongdx271
+# Worldometers COVID-19 Telegram Alert
+# By github.com/panophan
 
 COUNTRY="Vietnam"
 TELEGRAM_API_KEY="<set-your-api-key-here>"
@@ -27,14 +28,28 @@ function sendTelegram() {
 	python ${CURRENTDIR}/pusher.py $urldata
 }
 
-RAW=$(curl -s "https://www.worldometers.info/coronavirus/" | sed 's/<tr/\n<tr/g' | grep "${COUNTRY}" | grep '<tr style="">' | sed 's/<td/\n<td/g' | grep ^'<td' | sed 's/<!--//g' | sed 's/-->//g')
+HTMLDUMP="/tmp/wom-coronavirus.html"
+echo '<table>' > ${HTMLDUMP}.tmp
+curl -s "https://www.worldometers.info/coronavirus/" | sed ':a;N;$!ba;s/\n/ /g' | sed 's/<tr/\n<tr/g' | sed 's/<\/tr>/<\/tr>\n/g' | grep '<tr' | grep "<th \|${COUNTRY}" >> ${HTMLDUMP}.tmp
+echo '</table>' >> ${HTMLDUMP}.tmp
+if [[ -f ${HTMLDUMP} ]]; then
+	rm ${HTMLDUMP}
+fi
+##### REFORMATING ######
+cat ${HTMLDUMP}.tmp | sed 's/<td[^>]*>/<td>/g' | sed 's/<th[^>]*>/<th>/g' | sed 's/<tr[^>]*>/<tr>/g' | sed 's/<br \/>/ /g' | sed 's/> />/g' | sed 's/ </</g' >> ${HTMLDUMP}.tmpx
+rm ${HTMLDUMP}.tmp
+cat ${HTMLDUMP}.tmpx | sed 's/<!--/\n<!--/g' | sed 's/-->/-->\n/g' | grep -v '<!--' | sed ':a;N;$!ba;s/\n/ /g' | sed 's/<tr/\n<tr/g' | sed 's/ </</g' | sed 's/> />/g' >> ${HTMLDUMP}.tmp
+rm ${HTMLDUMP}.tmpx
+cat ${HTMLDUMP}.tmp | sed 's/<td>  */<td>/g' | sed 's/<td><\/td>/<td>-<\/td>/g' >> ${HTMLDUMP}.tmpx
+mv ${HTMLDUMP}.tmpx ${HTMLDUMP}
+########################
 
-TC=$(echo "${RAW}" | head -2 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
-NC=$(echo "${RAW}" | head -4 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
-TD=$(echo "${RAW}" | head -5 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
-ND=$(echo "${RAW}" | head -6 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
-RC=$(echo "${RAW}" | head -7 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
-AC=$(echo "${RAW}" | head -9 | tail -1 | grep -Po '>\K.*?(?=<)' | sed 's/^ //g' | sed 's/ $//g' | sed 's/^$/-/g')
+TC=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -2 | tail -1)
+NC=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -3 | tail -1)
+TD=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -4 | tail -1)
+ND=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -5 | tail -1)
+RC=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -6 | tail -1)
+AC=$(cat ${HTMLDUMP} | grep -Po '<td>\K.*?(?=<\/td>)' | head -7 | tail -1)
 
 if [[ ! -z ${TC} ]]; then
 	if [[ -f ${LASTUPDATEFILE} ]]; then
