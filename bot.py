@@ -1,5 +1,6 @@
 import time
 import telebot
+import sqlite3
 
 with open ('api.key', 'r') as reader:
   for line in reader.readlines():
@@ -15,28 +16,104 @@ with open ('api.key', 'r') as reader:
 
 bot = telebot.TeleBot(token=TELEGRAM_API_KEY)
 
+def init_conn_db():
+  conn = sqlite3.connect('test.db')
+  print("Connect database successfully")
+  return conn
+
+user_dict = {}
+
+class User:
+  def __init__(self, name):
+    self.name = name
+    self.age = None
+    self.sex = None
+    self.address = None
+    self.salary = None
+
 def find_at(msg):
   for text in msg:
     if '@' in text:
       return text
 
-@bot.message_handler(commands=['start'])
+# @bot.message_handler(commands=['start'])
+# def send_welcome(message):
+#   bot.reply_to(message, 'Welcome!')
+
+# @bot.message_handler(commands=['help'])
+# def send_welcome(message):
+#   bot.reply_to(message, 'To use this bot, send it a username')
+
+# @bot.message_handler(func=lambda msg: msg.text is not None and '@' in msg.text)
+# def at_answer(message):
+#   texts = message.text.split(' ')
+#   at_text = find_at(texts)
+
+#   bot.reply_to(message, 'https://instagram.com/{}'.format(at_text[1:]))
+
+######################################################################
+
+# Handle '/start' and '/help'
+@bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
-  bot.reply_to(message, 'Welcome!')
+  msg = bot.reply_to(message, """\
+Hi there, I am Example bot.
+What's your name?
+""")
+  bot.register_next_step_handler(msg, process_name_step)
 
-@bot.message_handler(commands=['help'])
-def send_welcome(message):
-  bot.reply_to(message, 'To use this bot, send it a username')
 
-@bot.message_handler(func=lambda msg: msg.text is not None and '@' in msg.text)
-def at_answer(message):
-  texts = message.text.split(' ')
-  at_text = find_at(texts)
+def process_name_step(message):
+  try:
+    chat_id = message.chat.id
+    name = message.text
+    user = User(name)
+    user_dict[chat_id] = user
+    msg = bot.reply_to(message, 'How old are you?')
+    bot.register_next_step_handler(msg, process_age_step)
+  except Exception as e:
+    bot.reply_to(message, 'oooops')
 
-  bot.reply_to(message, 'https://instagram.com/{}'.format(at_text[1:]))
+
+def process_age_step(message):
+  try:
+    chat_id = message.chat.id
+    age = message.text
+    if not age.isdigit():
+      msg = bot.reply_to(message, 'Age should be a number. How old are you?')
+      bot.register_next_step_handler(msg, process_age_step)
+      return
+    user = user_dict[chat_id]
+    user.age = age
+    markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+    markup.add('Male', 'Female')
+    msg = bot.reply_to(message, 'What is your gender', reply_markup=markup)
+    bot.register_next_step_handler(msg, process_sex_step)
+  except Exception as e:
+    bot.reply_to(message, 'oooops')
+
+
+def process_sex_step(message):
+  try:
+    chat_id = message.chat.id
+    sex = message.text
+    user = user_dict[chat_id]
+    if (sex == u'Male') or (sex == u'Female'):
+      user.sex = sex
+    else:
+      raise Exception()
+    bot.send_message(chat_id, 'Nice to meet you ' + user.name + '\n Age:' + str(user.age) + '\n Sex:' + user.sex)
+  except Exception as e:
+    bot.reply_to(message, 'oooops')
+
+bot.enable_save_next_step_handlers(delay=2)
+
+bot.load_next_step_handlers()
+
+
+bot.polling()
+bot.polling(none_stop=True)
+bot.polling(interval=3)
 
 while True:
-  try:
-    bot.polling()
-  except Exception:
-    time.sleep(15)
+  pass
