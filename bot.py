@@ -1,6 +1,7 @@
 import time
 import telebot
 import sqlite3
+from telebot import types
 
 with open ('api.key', 'r') as reader:
   for line in reader.readlines():
@@ -15,6 +16,10 @@ with open ('api.key', 'r') as reader:
       continue
 
 bot = telebot.TeleBot(token=TELEGRAM_API_KEY)
+
+bot.enable_save_next_step_handlers(delay=2)
+
+bot.load_next_step_handlers()
 
 def init_conn_db():
   conn = sqlite3.connect('test.db')
@@ -62,18 +67,16 @@ What's your name?
 """)
   bot.register_next_step_handler(msg, process_name_step)
 
-
 def process_name_step(message):
   try:
     chat_id = message.chat.id
     name = message.text
-    user = User(name)
+    user = User(uid,name)
     user_dict[chat_id] = user
     msg = bot.reply_to(message, 'How old are you?')
     bot.register_next_step_handler(msg, process_age_step)
   except Exception as e:
     bot.reply_to(message, 'oooops')
-
 
 def process_age_step(message):
   try:
@@ -92,7 +95,6 @@ def process_age_step(message):
   except Exception as e:
     bot.reply_to(message, 'oooops')
 
-
 def process_sex_step(message):
   try:
     chat_id = message.chat.id
@@ -102,14 +104,45 @@ def process_sex_step(message):
       user.sex = sex
     else:
       raise Exception()
-    bot.send_message(chat_id, 'Nice to meet you ' + user.name + '\n Age:' + str(user.age) + '\n Sex:' + user.sex)
+    # bot.send_message(chat_id, 'Nice to meet you ' + user.name + '\n Age:' + str(user.age) + '\n Sex:' + user.sex + '\n Tell me your address!')
+    msg = bot.reply_to(message, 'What is your address')
+    bot.register_next_step_handler(msg, process_address_step)
   except Exception as e:
     bot.reply_to(message, 'oooops')
 
-bot.enable_save_next_step_handlers(delay=2)
+def process_address_step(message):
+  try:
+    chat_id = message.chat.id
+    address = message.text
+    user = user_dict[chat_id]
+    user.address = address
+    msg = bot.reply_to(message, 'What is your salary')
+    bot.register_next_step_handler(msg, process_salary_step)
+  except Exception as e:
+    bot.reply_to(message, 'oooops')
 
-bot.load_next_step_handlers()
+def process_salary_step(message):
+  try:
+    chat_id = message.chat.id
+    salary = message.text
+    if not salary.isdigit():
+      msg = bot.reply_to(message, 'Salary should be a number!')
+      bot.register_next_step_handler(msg, process_salary_step)
+      return
+    user = user_dict[chat_id]
+    user.salary = salary
+    bot.send_message(chat_id, 'Nice to meet you ' + user.name + '\n Age: ' + user.age + '\n Sex: ' + user.sex + '\n Address: ' + user.address + '\n Salary: ' + user.salary)
+    last = insert_user_to_db(user)
+    print 'last userid: ' + last
+  except Exception as e:
+    bot.reply_to(message, 'oooops')
 
+def insert_user_to_db(user):
+  conn = init_conn_db()
+  sql = '''INSERT INTO COMPANY (NAME,AGE,SEX,ADDRESS,SALARY) VALUES (?,?,?,?,?)'''
+  cur = conn.cursor()
+  cur.execute(sql,user)
+  return cur.lastrowid
 
 bot.polling()
 bot.polling(none_stop=True)
